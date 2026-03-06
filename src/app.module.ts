@@ -4,6 +4,15 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
+import { SchoolModule } from './school/school.module';
+import { UsersModule } from './users/users.module';
+import { AcademicYearModule } from './academic-year/academic-year.module';
+import { TermModule } from './term/term.module';
+import { ClassroomModule } from './classroom/classroom.module';
+import { StudentModule } from './student/student.module';
+import { GuardianModule } from './guardian/guardian.module';
+import { AssessmentModule } from './assessment/assessment.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -22,6 +31,15 @@ import { ConfigService } from '@nestjs/config';
         synchronize: true
       }),
     }),
+    SchoolModule,
+    UsersModule,
+    AcademicYearModule,
+    TermModule,
+    ClassroomModule,
+    StudentModule,
+    GuardianModule,
+    AssessmentModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
