@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { User, Role } from '../users/entities/user.entity';
+import { User, Role } from 'src/users/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
-// ─── Mock du repository User ──────────────────────────────────────────────────
 const mockUserRepository = {
   findOne: jest.fn(),
   create: jest.fn(),
@@ -14,7 +13,6 @@ const mockUserRepository = {
   update: jest.fn(),
 };
 
-// ─── Mock du JwtService ───────────────────────────────────────────────────────
 const mockJwtService = {
   signAsync: jest.fn(),
 };
@@ -32,8 +30,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-
-    // Reset tous les mocks avant chaque test
     jest.clearAllMocks();
   });
 
@@ -49,7 +45,7 @@ describe('AuthService', () => {
     });
   });
 
-  // ─── validatePassword ─────────────────────────────────────────────────────────
+  // ─── validatePassword ────────────────────────────────────────────────────────
 
   describe('validatePassword', () => {
     it('doit retourner true si le mot de passe correspond au hash', async () => {
@@ -69,7 +65,7 @@ describe('AuthService', () => {
 
   describe('register', () => {
     it('doit créer un utilisateur avec succès', async () => {
-      mockUserRepository.findOne.mockResolvedValue(null); // email pas encore utilisé
+      mockUserRepository.findOne.mockResolvedValue(null);
       mockUserRepository.create.mockReturnValue({ id: 1, email: 'test@test.com' });
       mockUserRepository.save.mockResolvedValue({ id: 1, email: 'test@test.com' });
 
@@ -81,7 +77,7 @@ describe('AuthService', () => {
       expect(result).toEqual({ message: 'Utilisateur créé avec succès' });
     });
 
-    it('doit lever ConflictException si l\'email existe déjà', async () => {
+    it("doit lever ConflictException si l'email existe déjà", async () => {
       mockUserRepository.findOne.mockResolvedValue({ id: 1, email: 'test@test.com' });
 
       await expect(service.register('test@test.com', 'password123', 1))
@@ -117,7 +113,7 @@ describe('AuthService', () => {
       expect(result.user).toEqual({ id: 1, email: 'test@test.com', role: Role.STUDENT });
     });
 
-    it('doit lever UnauthorizedException si l\'email est introuvable', async () => {
+    it("doit lever UnauthorizedException si l'email est introuvable", async () => {
       mockUserRepository.findOne.mockResolvedValue(null);
 
       await expect(service.login('inconnu@test.com', 'password123'))
@@ -168,7 +164,7 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('refreshToken', 'new_refresh_token');
     });
 
-    it('doit lever UnauthorizedException si refresh_token est null (déconnecté)', async () => {
+    it("doit lever UnauthorizedException si refresh_token est null (déconnecté)", async () => {
       mockUserRepository.findOne.mockResolvedValue({ id: 1, refresh_token: null });
 
       await expect(service.refreshTokens(1, 'some_token'))
@@ -205,7 +201,7 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('email', 'test@test.com');
     });
 
-    it('doit lever UnauthorizedException si l\'utilisateur est introuvable', async () => {
+    it("doit lever UnauthorizedException si l'utilisateur est introuvable", async () => {
       mockUserRepository.findOne.mockResolvedValue(null);
 
       await expect(service.getMe(999)).rejects.toThrow(UnauthorizedException);
