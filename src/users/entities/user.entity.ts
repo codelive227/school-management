@@ -13,7 +13,7 @@ export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()  
+  @Column({ unique: true })
   email!: string;
 
   @Column()
@@ -25,6 +25,10 @@ export class User {
     default: Role.STUDENT,
   })
   role!: Role;
+
+  // Stocke le refreshToken hashé — null quand l'utilisateur est déconnecté
+  @Column({ type: 'text', nullable: true, default: null })
+  refresh_token!: string | null;
 
   @ManyToOne(() => School, (school) => school.users)
   @JoinColumn({ name: 'school_id' })

@@ -1,25 +1,19 @@
-import { isEmail } from './../../../node_modules/@types/validator/index.d';
-import { IsEmail, IsNotEmpty, MinLength, IsEnum } from "class-validator";
-import { ApiProperty } from "@nestjs/swagger";
-import { Role } from '../../users/entities/user.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
-    @ApiProperty({ example: 'test@example.com' })
-    @IsEmail()
-    email!: string;
+  @ApiProperty({ example: 'user@example.com', description: 'Email de l\'utilisateur' })
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
 
+  @ApiProperty({ example: 'StrongPassword123!', description: 'Mot de passe (min 6 caractères)', minLength: 6 })
+  @IsString()
+  @MinLength(6)
+  password!: string;
 
-    @ApiProperty({ example: 'password123' })
-    @IsNotEmpty()
-    @MinLength(4)
-    password!: string;
-
-
-    @ApiProperty({ example: 1 })
-    @IsNotEmpty()
-    school_id!: number;
-
-     @ApiProperty({ enum: Role, example: Role.STUDENT })
-  @IsEnum(Role)
-  role!: Role;
+  @ApiProperty({ example: 1, description: 'ID de l\'école' })
+  @IsNumber()
+  @IsNotEmpty()
+  school_id!: number;
 }
