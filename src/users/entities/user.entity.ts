@@ -1,10 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { School } from '../../school/entities/school.entity';
 
 export enum Role {
-  ADMIN = 'ADMIN',
+  ADMIN   = 'ADMIN',
   TEACHER = 'TEACHER',
-  PARENT = 'PARENT',
+  PARENT  = 'PARENT',
   STUDENT = 'STUDENT',
 }
 
@@ -26,14 +34,22 @@ export class User {
   })
   role!: Role;
 
-  // Stocke le refreshToken hashé — null quand l'utilisateur est déconnecté
+  // Refresh token hashé — null = déconnecté
   @Column({ type: 'text', nullable: true, default: null })
   refresh_token!: string | null;
 
-  @ManyToOne(() => School, (school) => school.users)
+  // Relation école — nullable pour les super-admins système
+  @ManyToOne(() => School, (school) => school.users, { nullable: true })
   @JoinColumn({ name: 'school_id' })
   school!: School;
 
-  @Column()
+  @Column({ nullable: true })
   school_id!: number;
+
+  
+  @CreateDateColumn()
+  created_at!: Date;
+
+  @UpdateDateColumn()
+  updated_at!: Date;
 }

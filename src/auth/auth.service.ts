@@ -12,7 +12,7 @@ export class AuthService {
     @InjectRepository(User) private userRepo: Repository<User>,
   ) {}
 
-  // ─── Utilitaires ────────────────────────────────────────────────────────────
+  // ─── Utilitaires ─────────────────────────────────────────────────────────────
 
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 10);
@@ -22,7 +22,8 @@ export class AuthService {
     return bcrypt.compare(password, hash);
   }
 
-  async generateTokens(payload: { sub: number; role: string }) {
+  // ✅ school_id ajouté dans le payload — requis pour RBAC multi-tenant
+  async generateTokens(payload: { sub: number; role: string; school_id: number | null }) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: process.env.JWT_ACCESS_SECRET,
@@ -34,7 +35,6 @@ export class AuthService {
       }),
     ]);
 
-    // Sauvegarde le refreshToken hashé en base pour pouvoir l'invalider au logout
     const hashedRefreshToken = await this.hashPassword(refreshToken);
     await this.userRepo.update(payload.sub, { refresh_token: hashedRefreshToken });
 
@@ -63,18 +63,27 @@ export class AuthService {
     const valid = await this.validatePassword(password, user.password_hash);
     if (!valid) throw new UnauthorizedException('Email ou mot de passe incorrect');
 
-    const tokens = await this.generateTokens({ sub: user.id, role: user.role });
+    // ✅ school_id dans le token → req.user.school_id disponible dans tous les controllers
+    const tokens = await this.generateTokens({
+      sub:       user.id,
+      role:      user.role,
+      school_id: user.school_id,
+    });
 
     return {
       ...tokens,
-      user: { id: user.id, email: user.email, role: user.role },
+      user: {
+        id:        user.id,
+        email:     user.email,
+        role:      user.role,
+        school_id: user.school_id,
+      },
     };
   }
 
   // ─── Déconnexion ─────────────────────────────────────────────────────────────
 
   async logout(userId: number) {
-    // Met le refresh_token à null → invalide toute tentative de refresh
     await this.userRepo.update(userId, { refresh_token: null });
     return { message: 'Déconnexion réussie' };
   }
@@ -84,16 +93,19 @@ export class AuthService {
   async refreshTokens(userId: number, refreshToken: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
 
-    // Si l'utilisateur n'existe pas ou a déjà fait un logout
     if (!user || !user.refresh_token) {
       throw new UnauthorizedException('Accès refusé, veuillez vous reconnecter');
     }
 
-    // Vérifie que le refreshToken envoyé correspond bien à celui stocké en base
     const tokenMatch = await this.validatePassword(refreshToken, user.refresh_token);
     if (!tokenMatch) throw new UnauthorizedException('Refresh token invalide');
 
-    return this.generateTokens({ sub: user.id, role: user.role });
+    // ✅ school_id inclus dans le token rafraîchi aussi
+    return this.generateTokens({
+      sub:       user.id,
+      role:      user.role,
+      school_id: user.school_id,
+    });
   }
 
   // ─── Profil connecté ─────────────────────────────────────────────────────────
@@ -105,7 +117,6 @@ export class AuthService {
     });
     if (!user) throw new UnauthorizedException('Utilisateur introuvable');
 
-    // Ne jamais retourner les champs sensibles
     const { password_hash, refresh_token, ...result } = user;
     return result;
   }

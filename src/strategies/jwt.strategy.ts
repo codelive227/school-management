@@ -9,11 +9,16 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt-access') 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_ACCESS_SECRET') || 'default-secret',
+      secretOrKey: configService.get<string>('JWT_ACCESS_SECRET'),
     });
   }
 
   async validate(payload: any) {
-    return { userId: payload.sub, role: payload.role };
+    // ✅ school_id inclus → disponible dans req.user pour le multi-tenant
+    return {
+      userId:    payload.sub,
+      role:      payload.role,
+      school_id: payload.school_id, // ← ajout clé pour RBAC multi-tenant
+    };
   }
 }
