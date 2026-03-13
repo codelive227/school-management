@@ -49,8 +49,6 @@ export class UserService {
     });
   }
 
-  // ─── CRUD standard ───────────────────────────────────────────────────────────
-
   async findAll(): Promise<User[]> {
     return this.userRepository.find({ relations: ['school'] });
   }

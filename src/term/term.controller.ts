@@ -1,34 +1,63 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller, Get, Post, Body, Patch, Param,
+  Delete, UseGuards, ParseIntPipe, HttpCode, HttpStatus,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { TermService } from './term.service';
 import { CreateTermDto } from './dto/create-term.dto';
 import { UpdateTermDto } from './dto/update-term.dto';
+import { JwtAccessGuard } from '../guards/jwt-auth.guard';
+import { RolesGuard } from '../guards/role.guard';
+import { Roles } from '../auth/role.decorator';
+import { Role } from '../users/entities/user.entity';
 
-@Controller('term')
+@ApiTags('Terms')
+@ApiBearerAuth()
+@UseGuards(JwtAccessGuard, RolesGuard)
+@Controller('terms')
 export class TermController {
-  constructor(private readonly termService: TermService) {}
+  constructor(private readonly service: TermService) {}
 
+  // USA02 : ADMIN crée un trimestre
   @Post()
-  create(@Body() createTermDto: CreateTermDto) {
-    return this.termService.create(createTermDto);
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: '[ADMIN] Créer un trimestre' })
+  @ApiResponse({ status: 201, description: 'Trimestre créé.' })
+  create(@Body() dto: CreateTermDto) {
+    return this.service.create(dto);
   }
 
-  @Get()
-  findAll() {
-    return this.termService.findAll();
+  // ADMIN et TEACHER voient les trimestres d'une année
+  @Get('academic-year/:academicYearId')
+  @Roles(Role.ADMIN, Role.TEACHER)
+  @ApiOperation({ summary: '[ADMIN, TEACHER] Lister les trimestres d\'une année scolaire' })
+  findByAcademicYear(@Param('academicYearId', ParseIntPipe) id: number) {
+    return this.service.findByAcademicYear(id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.termService.findOne(+id);
+  @Roles(Role.ADMIN, Role.TEACHER)
+  @ApiOperation({ summary: '[ADMIN, TEACHER] Voir un trimestre' })
+  @ApiResponse({ status: 404, description: 'Trimestre introuvable.' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTermDto: UpdateTermDto) {
-    return this.termService.update(+id, updateTermDto);
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: '[ADMIN] Modifier un trimestre' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateTermDto,
+  ) {
+    return this.service.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.termService.remove(+id);
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: '[ADMIN] Supprimer un trimestre' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.service.remove(id);
   }
 }

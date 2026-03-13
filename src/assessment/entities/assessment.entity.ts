@@ -24,10 +24,6 @@ export class Assessment {
   @Column()
   school_id!: number;
 
-  @ManyToOne(() => Term, (term) => term.assessments)
-  @JoinColumn({ name: 'term_id' })
-  term!: Term;
-
   @Column()
   term_id!: number;
 

@@ -13,6 +13,10 @@ import { StudentModule } from './student/student.module';
 import { GuardianModule } from './guardian/guardian.module';
 import { AssessmentModule } from './assessment/assessment.module';
 import { AuthModule } from './auth/auth.module';
+import { TeacherModule } from './teacher/teacher.module';
+import { FeesModule } from './fees/fees.module';
+import { SubjectModule } from './subject/subject.module';
+
 
 @Module({
   imports: [
@@ -40,6 +44,9 @@ import { AuthModule } from './auth/auth.module';
     GuardianModule,
     AssessmentModule,
     AuthModule,
+    TeacherModule,
+    FeesModule,
+    SubjectModule,
   ],
   controllers: [AppController],
   providers: [AppService],
